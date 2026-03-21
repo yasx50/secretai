@@ -7,12 +7,13 @@ const userSchema = new mongoose.Schema({
     required: true
   },
 
-  password: {
+  clerkid: {
     type: String,
-    required: true
+    required: true,
+    unique: true
   },
 
-  clerkid: {
+  secretPin: {
     type: String
   },
 
@@ -26,18 +27,14 @@ const userSchema = new mongoose.Schema({
 
 
 userSchema.pre("save", async function (next) {
-
-  if (!this.isModified("password")) return next();
-
-  this.password = await bcrypt.hash(this.password, 10);
-
+  if (!this.isModified("secretPin") || !this.secretPin) return next();
+  this.secretPin = await bcrypt.hash(this.secretPin, 10);
   next();
-
 });
 
-
-userSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(password, this.password);
+userSchema.methods.isSecretPinCorrect = async function (pin) {
+  if (!this.secretPin) return false;
+  return await bcrypt.compare(pin, this.secretPin);
 };
 
 export const User = mongoose.model("User", userSchema);

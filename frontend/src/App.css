@@ -1,1 +1,115 @@
-@import "tailwindcss";
+.app-shell {
+  min-height: 100vh;
+  background: #0b1020;
+  color: #e6eaff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+  font-family: Inter, system-ui, Arial, sans-serif;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: #121a31;
+  border: 1px solid #253056;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.wide {
+  max-width: 760px;
+}
+
+.sub {
+  color: #9ba6d2;
+  margin-top: 0;
+}
+
+.stack,
+.row,
+.tabs,
+.secret {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.stack {
+  flex-direction: column;
+}
+
+input,
+button {
+  border-radius: 8px;
+  border: 1px solid #2c3a68;
+  background: #0f1630;
+  color: #e6eaff;
+  padding: 0.62rem 0.75rem;
+}
+
+input {
+  width: 100%;
+}
+
+button {
+  cursor: pointer;
+}
+
+.ghost {
+  background: transparent;
+}
+
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid #2c3a68;
+  background: #0f1630;
+  color: #e6eaff;
+  padding: 0.62rem 0.75rem;
+  text-decoration: none;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tabs {
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+
+.tab.active {
+  background: #374676;
+}
+
+.chatbox {
+  border: 1px solid #2c3a68;
+  border-radius: 10px;
+  height: 340px;
+  overflow: auto;
+  padding: 0.75rem;
+  margin-bottom: 0.8rem;
+  background: #0d1328;
+}
+
+.msg {
+  margin: 0.45rem 0;
+}
+
+.msg.user strong {
+  color: #6cb4ff;
+}
+
+.msg.ai strong {
+  color: #86efac;
+}
+
+.error {
+  color: #fda4af;
+  margin-top: 0.8rem;
+}
