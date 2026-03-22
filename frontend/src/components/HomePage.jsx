@@ -1,347 +1,409 @@
 import { SignedIn, SignedOut, SignOutButton, useSignIn } from "@clerk/clerk-react";
 import { Link } from "react-router-dom";
 
-/* ─── Styles ──────────────────────────────────────────────────────────────── */
 const css = `
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:       #05070f;
-    --card:     rgba(12,17,32,0.85);
-    --border:   rgba(255,255,255,0.08);
-    --accent:   #c8f04c;
-    --accent2:  #4fc8ff;
-    --txt:      #eef0f7;
-    --muted:    #5a6280;
-    --font-d:   'Fraunces', serif;
-    --font-b:   'DM Sans', sans-serif;
+    --bg:         #060810;
+    --surface:    #0b0f1c;
+    --surface2:   #111828;
+    --border:     rgba(255,255,255,0.07);
+    --border-h:   rgba(255,255,255,0.14);
+    --accent:     #e8e0cc;
+    --gold:       #c9a96e;
+    --gold-dim:   rgba(201,169,110,0.12);
+    --txt:        #d8dce8;
+    --txt-soft:   #8a92aa;
+    --txt-dim:    #3d4560;
+    --font-s:     'Cormorant Garamond', serif;
+    --font-b:     'DM Sans', sans-serif;
+    --font-m:     'DM Mono', monospace;
   }
 
-  body { background: var(--bg); color: var(--txt); font-family: var(--font-b); overflow-x: hidden; }
-
-  /* ── Full-page wrapper ── */
-  .home-shell {
-    position: relative;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    overflow: hidden;
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--font-b);
+    overflow-x: hidden;
   }
 
-  /* ── Animated mesh background ── */
-  .mesh {
+  /* purely decorative – never intercept clicks */
+  .bg-layer {
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(ellipse 70% 55% at 15% 10%, rgba(200,240,76,0.07) 0%, transparent 60%),
-      radial-gradient(ellipse 55% 45% at 85% 90%, rgba(79,200,255,0.08) 0%, transparent 55%),
-      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(79,200,255,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 0% 0%,    rgba(201,169,110,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 40% at 100% 100%, rgba(100,120,200,0.05) 0%, transparent 55%),
       var(--bg);
   }
-
-  /* ── Floating orbs ── */
-  .orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(80px);
-    opacity: 0.18;
-    pointer-events: none;
-    z-index: 0;
-    animation: drift linear infinite;
-  }
-  .orb-1 { width:500px;height:500px; background:#c8f04c; top:-120px; left:-100px; animation-duration:28s; }
-  .orb-2 { width:420px;height:420px; background:#4fc8ff; bottom:-100px; right:-80px; animation-duration:22s; animation-direction:reverse; }
-  .orb-3 { width:260px;height:260px; background:#a78bfa; top:50%;left:60%; animation-duration:35s; }
-  @keyframes drift {
-    0%   { transform: translate(0,0) scale(1); }
-    33%  { transform: translate(30px,-40px) scale(1.05); }
-    66%  { transform: translate(-20px,25px) scale(0.97); }
-    100% { transform: translate(0,0) scale(1); }
-  }
-
-  /* ── Noise grain overlay ── */
-  .grain {
+  .bg-lines {
     position: fixed;
     inset: 0;
-    z-index: 1;
+    z-index: 0;
     pointer-events: none;
-    opacity: 0.028;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-size: 180px 180px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.013) 0px,
+      rgba(255,255,255,0.013) 1px,
+      transparent 1px,
+      transparent 80px
+    );
   }
 
-  /* ── Content layer ── */
-  .home-content {
+  /* ─── Two-column shell ─── */
+  .home-shell {
     position: relative;
-    z-index: 2;
-    width: 100%;
-    max-width: 520px;
+    z-index: 1;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto;
+  }
+
+  /* ─── Left col ─── */
+  .hero-col {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0;
+    justify-content: center;
+    padding: 80px 64px 80px 72px;
+    border-right: 1px solid var(--border);
   }
 
-  /* ── Badge ── */
-  .badge {
+  .stamp {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 5px 14px 5px 8px;
-    background: rgba(200,240,76,0.08);
-    border: 1px solid rgba(200,240,76,0.22);
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    color: var(--accent);
+    gap: 10px;
+    font-family: var(--font-m);
+    font-size: 0.62rem;
+    font-weight: 300;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
-    margin-bottom: 28px;
-    animation: fadeDown 0.6s ease both;
+    color: var(--gold);
+    margin-bottom: 52px;
+    opacity: 0;
+    animation: revealUp 0.7s 0.1s ease forwards;
   }
-  .badge-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
-    animation: pulse 2s ease infinite;
+  .stamp-rule {
+    display: inline-block;
+    width: 28px;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.55;
   }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  /* ── Hero heading ── */
   .hero-title {
-    font-family: var(--font-d);
-    font-size: clamp(3rem, 9vw, 5.5rem);
-    font-weight: 900;
-    line-height: 0.95;
-    letter-spacing: -0.03em;
-    text-align: center;
-    margin-bottom: 20px;
-    animation: fadeDown 0.6s 0.1s ease both;
+    font-family: var(--font-s);
+    font-size: clamp(3rem, 5vw, 5.6rem);
+    font-weight: 300;
+    line-height: 1.04;
+    letter-spacing: -0.01em;
+    color: var(--accent);
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: revealUp 0.8s 0.2s ease forwards;
   }
   .hero-title em {
     font-style: italic;
+    color: var(--gold);
+  }
+
+  .hero-body {
+    font-size: 0.88rem;
     font-weight: 300;
-    color: transparent;
-    -webkit-text-stroke: 1.5px rgba(200,240,76,0.7);
-  }
-  .hero-title .accent-word {
-    color: var(--accent);
-    display: block;
-  }
-
-  .hero-sub {
-    font-size: 0.95rem;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.65;
-    max-width: 360px;
-    margin-bottom: 44px;
-    animation: fadeDown 0.6s 0.2s ease both;
+    line-height: 1.85;
+    color: var(--txt-soft);
+    max-width: 380px;
+    margin-bottom: 56px;
+    opacity: 0;
+    animation: revealUp 0.8s 0.3s ease forwards;
   }
 
-  /* ── Glass card ── */
-  .glass-card {
-    width: 100%;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 36px 36px 32px;
-    backdrop-filter: blur(24px) saturate(1.4);
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,0.04) inset,
-      0 40px 100px rgba(0,0,0,0.6),
-      0 0 80px rgba(200,240,76,0.04);
-    animation: fadeUp 0.7s 0.25s ease both;
+  .feat-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    opacity: 0;
+    animation: revealUp 0.8s 0.4s ease forwards;
   }
-  @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:none} }
-  @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)}  to{opacity:1;transform:none} }
-
-  .card-label {
-    font-size: 0.68rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 20px;
+  .feat-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 14px;
+    font-size: 0.76rem;
+    font-weight: 300;
+    color: var(--txt-dim);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
-  .card-label::after {
-    content:'';
+  .feat-mark {
+    width: 20px;
+    height: 1px;
+    background: var(--gold);
+    opacity: 0.4;
+    flex-shrink: 0;
+  }
+
+  /* ─── Right col ─── */
+  .auth-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 72px 80px 64px;
+  }
+
+  .auth-eyebrow {
+    font-family: var(--font-m);
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--txt-dim);
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: revealUp 0.7s 0.3s ease forwards;
+  }
+  .auth-heading {
+    font-family: var(--font-s);
+    font-size: 2.2rem;
+    font-weight: 400;
+    color: var(--accent);
+    margin-bottom: 10px;
+    opacity: 0;
+    animation: revealUp 0.7s 0.35s ease forwards;
+  }
+  .auth-sub {
+    font-size: 0.82rem;
+    font-weight: 300;
+    color: var(--txt-soft);
+    line-height: 1.7;
+    margin-bottom: 44px;
+    opacity: 0;
+    animation: revealUp 0.7s 0.4s ease forwards;
+  }
+
+  /* ─── OAuth buttons ─── */
+  .oauth-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    opacity: 0;
+    animation: revealUp 0.7s 0.45s ease forwards;
+  }
+
+  .oauth-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: 15px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--txt);
+    font-family: var(--font-b);
+    font-size: 0.84rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+    text-align: left;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    /* z-index ensures it sits above bg layers */
+    z-index: 2;
+  }
+  .oauth-btn:hover {
+    border-color: var(--border-h);
+    background: var(--surface2);
+    box-shadow: 0 4px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  .oauth-btn:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
+  .oauth-btn:active { transform: scale(0.997); }
+
+  .oauth-logo {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .oauth-label { flex: 1; }
+  .oauth-hint {
+    font-family: var(--font-m);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    color: var(--txt-dim);
+  }
+
+  .or-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-m);
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--txt-dim);
+    margin: 4px 0;
+  }
+  .or-divider::before,.or-divider::after {
+    content: '';
     flex: 1;
     height: 1px;
     background: var(--border);
   }
 
-  /* ── OAuth buttons ── */
-  .oauth-stack {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  /* ─── Signed-in block ─── */
+  .si-block {
+    opacity: 0;
+    animation: revealUp 0.7s 0.3s ease forwards;
   }
-
-  .oauth-btn {
-    display: flex;
+  .si-badge {
+    display: inline-flex;
     align-items: center;
-    gap: 14px;
-    width: 100%;
-    padding: 14px 20px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    color: var(--txt);
+    gap: 8px;
+    background: var(--gold-dim);
+    border: 1px solid rgba(201,169,110,0.18);
+    border-radius: 2px;
+    padding: 5px 14px;
+    font-family: var(--font-m);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 32px;
+  }
+  .si-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 6px var(--gold);
+    animation: blink 2.5s ease infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.15} }
+
+  .si-title {
+    font-family: var(--font-s);
+    font-size: 2.8rem;
+    font-weight: 300;
+    line-height: 1.05;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  .si-title em { font-style: italic; color: var(--gold); }
+  .si-desc {
+    font-size: 0.82rem;
+    font-weight: 300;
+    color: var(--txt-soft);
+    line-height: 1.75;
+    margin-bottom: 40px;
+    max-width: 320px;
+  }
+  .si-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 28px;
+    background: var(--gold);
+    color: #08060000;
+    color: #0d0a04;
+    border: none;
+    border-radius: 3px;
     font-family: var(--font-b);
-    font-size: 0.9rem;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: #d4b47a;
+    box-shadow: 0 6px 28px rgba(201,169,110,0.28);
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 22px;
+    background: transparent;
+    color: var(--txt-soft);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    font-family: var(--font-b);
+    font-size: 0.82rem;
     font-weight: 400;
     cursor: pointer;
-    transition: all 0.22s ease;
-    text-align: left;
-    position: relative;
-    overflow: hidden;
+    transition: all 0.2s ease;
+    -webkit-appearance: none;
+    appearance: none;
   }
-  .oauth-btn::before {
-    content:'';
-    position:absolute;
-    inset:0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.06), transparent);
-    opacity:0;
-    transition: opacity 0.22s;
-  }
-  .oauth-btn:hover {
-    border-color: rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.07);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
-  }
-  .oauth-btn:hover::before { opacity:1; }
-  .oauth-btn:active { transform: translateY(0); }
+  .btn-ghost:hover { border-color: var(--border-h); color: var(--txt); }
 
-  .oauth-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
+  /* ─── Footer ─── */
+  .home-footer {
+    grid-column: 1 / -1;
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 1.1rem;
-  }
-  .oauth-icon.google  { background: rgba(234,67,53,0.15);  border: 1px solid rgba(234,67,53,0.2); }
-  .oauth-icon.facebook{ background: rgba(24,119,242,0.15); border: 1px solid rgba(24,119,242,0.2); }
-
-  .oauth-btn-text { flex: 1; }
-  .oauth-btn-text strong { display:block; font-weight:500; }
-  .oauth-btn-text span { font-size:0.75rem; color:var(--muted); }
-  .oauth-arrow { color:var(--muted); font-size:1rem; margin-left:auto; transition:transform 0.22s; }
-  .oauth-btn:hover .oauth-arrow { transform:translateX(4px); color:var(--txt); }
-
-  /* ── Divider ── */
-  .divider {
-    display:flex;
-    align-items:center;
-    gap:12px;
-    margin:20px 0;
-    color:var(--muted);
-    font-size:0.75rem;
-    letter-spacing:0.06em;
-    text-transform:uppercase;
-  }
-  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
-
-  /* ── Signed-in state ── */
-  .signed-in-body { text-align:center; }
-  .signed-in-avatar {
-    width:64px;height:64px;
-    border-radius:50%;
-    background: linear-gradient(135deg,#c8f04c,#4fc8ff);
-    display:flex;align-items:center;justify-content:center;
-    font-size:1.6rem;
-    margin:0 auto 16px;
-    box-shadow: 0 0 30px rgba(200,240,76,0.25);
-    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-  }
-  @keyframes popIn { from{opacity:0;transform:scale(0.5)} to{opacity:1;transform:scale(1)} }
-
-  .signed-in-body h3 {
-    font-family:var(--font-d);
-    font-size:1.5rem;
-    font-weight:700;
-    margin-bottom:6px;
-  }
-  .signed-in-body p { font-size:0.85rem; color:var(--muted); margin-bottom:28px; }
-
-  .action-row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-
-  .btn-cta {
-    display:inline-flex;align-items:center;gap:8px;
-    padding:13px 28px;
-    background: var(--accent);
-    color:#0a0f00;
-    border:none;border-radius:12px;
-    font-family:var(--font-b);font-size:0.88rem;font-weight:600;
-    cursor:pointer;text-decoration:none;
-    transition:all 0.22s ease;
-    box-shadow: 0 4px 24px rgba(200,240,76,0.3);
-    letter-spacing:0.01em;
-  }
-  .btn-cta:hover { transform:translateY(-2px); box-shadow:0 8px 36px rgba(200,240,76,0.45); background:#d4f75a; }
-
-  .btn-outline {
-    display:inline-flex;align-items:center;gap:8px;
-    padding:13px 22px;
-    background:transparent;
-    color:var(--txt);
-    border:1px solid var(--border);border-radius:12px;
-    font-family:var(--font-b);font-size:0.88rem;font-weight:400;
-    cursor:pointer;text-decoration:none;
-    transition:all 0.22s ease;
-  }
-  .btn-outline:hover { border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); transform:translateY(-2px); }
-
-  /* ── Footer note ── */
-  .home-footer {
-    position:relative;z-index:2;
-    margin-top:28px;
-    font-size:0.72rem;
-    color:var(--muted);
-    text-align:center;
-    letter-spacing:0.03em;
-    animation: fadeUp 0.6s 0.5s ease both;
+    justify-content: space-between;
+    padding: 18px 72px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-m);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--txt-dim);
     opacity: 0;
-    animation-fill-mode: both;
+    animation: revealUp 0.6s 0.6s ease forwards;
   }
-  .home-footer a { color:rgba(200,240,76,0.6); text-decoration:none; }
-  .home-footer a:hover { color:var(--accent); }
+  .home-footer a { color: var(--txt-dim); text-decoration: none; transition: color 0.2s; }
+  .home-footer a:hover { color: var(--txt-soft); }
+  .footer-links { display: flex; gap: 28px; }
 
-  /* ── Features strip ── */
-  .features {
-    position:relative;z-index:2;
-    display:flex;
-    gap:24px;
-    margin-top:32px;
-    flex-wrap:wrap;
-    justify-content:center;
-    animation: fadeUp 0.6s 0.4s ease both;
-    opacity:0;
-    animation-fill-mode:both;
+  /* ─── Keyframe ─── */
+  @keyframes revealUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  .feat {
-    display:flex;align-items:center;gap:7px;
-    font-size:0.77rem;color:var(--muted);
+
+  /* ─── Responsive ─── */
+  @media (max-width: 780px) {
+    .home-shell { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+    .hero-col { padding: 56px 28px 40px; border-right: none; border-bottom: 1px solid var(--border); }
+    .auth-col { padding: 44px 28px 56px; }
+    .home-footer { padding: 16px 28px; flex-direction: column; gap: 10px; text-align: center; }
   }
-  .feat-icon { font-size:0.95rem; }
 `;
 
-/* ─── Component ─────────────────────────────────────────────────────────── */
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24">
+    <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115Z"/>
+    <path fill="#34A853" d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.077 7.077 0 0 1-6.723-4.777L1.24 17.35C3.198 21.302 7.27 24 12 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987Z"/>
+    <path fill="#4A90D9" d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21Z"/>
+    <path fill="#FBBC05" d="M5.277 14.314a7.12 7.12 0 0 1-.388-2.314c0-.805.142-1.582.388-2.235L1.24 6.65A11.934 11.934 0 0 0 0 12c0 1.92.445 3.73 1.24 5.35l4.037-3.036Z"/>
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24">
+    <path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.514c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z"/>
+  </svg>
+);
+
 const HomePage = () => {
   const { signIn, isLoaded } = useSignIn();
 
@@ -358,106 +420,114 @@ const HomePage = () => {
     <>
       <style>{css}</style>
 
-      {/* ambient bg */}
-      <div className="mesh" />
-      <div className="orb orb-1" />
-      <div className="orb orb-2" />
-      <div className="orb orb-3" />
-      <div className="grain" />
+      {/* decorative bg – pointer-events:none so they never block clicks */}
+      <div className="bg-layer" />
+      <div className="bg-lines" />
 
-      <main className="home-shell">
-        <div className="home-content">
+      <div className="home-shell">
 
-          {/* Badge */}
-          <div className="badge">
-            <span className="badge-dot" />
-            End-to-end private AI
+        {/* ══ LEFT — brand & copy ══ */}
+        <section className="hero-col">
+          <div className="stamp">
+            <span className="stamp-rule" />
+            Classified — Authorised access only
           </div>
 
-          {/* Hero */}
           <h1 className="hero-title">
-            <em>Secret</em>
-            <span className="accent-word">AI Chat</span>
+            Your thoughts,<br />
+            <em>kept private.</em>
           </h1>
-          <p className="hero-sub">
-            Private, categorised conversations powered by AI.
-            Your messages stay yours — secured behind social login.
+
+          <p className="hero-body">
+            A private AI conversation space with category-based organisation
+            and an optional secret vault — protected behind your existing
+            social identity. Nothing is stored in plain sight.
           </p>
 
-          {/* ── SIGNED OUT ── */}
+          <ul className="feat-list">
+            {[
+              "Five isolated chat categories",
+              "Secret PIN-protected vault",
+              "No third-party data sharing",
+              "Session-authenticated API calls",
+            ].map((f) => (
+              <li key={f} className="feat-item">
+                <span className="feat-mark" />
+                {f}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* ══ RIGHT — auth ══ */}
+        <section className="auth-col">
+
           <SignedOut>
-            <div className="glass-card">
-              <div className="card-label">Sign in to continue</div>
-              <div className="oauth-stack">
+            <p className="auth-eyebrow">Access Portal</p>
+            <h2 className="auth-heading">Identify yourself</h2>
+            <p className="auth-sub">
+              Choose an authentication method below.<br />
+              No password. No new account required.
+            </p>
 
-                <button className="oauth-btn" onClick={() => loginWithProvider("oauth_google")}>
-                  <span className="oauth-icon google">
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115Z"/>
-                      <path fill="#34A853" d="M16.04 18.013c-1.09.703-2.474 1.078-4.04 1.078a7.077 7.077 0 0 1-6.723-4.777L1.24 17.35C3.198 21.302 7.27 24 12 24c2.933 0 5.735-1.043 7.834-3l-3.793-2.987Z"/>
-                      <path fill="#4A90D9" d="M19.834 21c2.195-2.048 3.62-5.096 3.62-9 0-.71-.109-1.473-.272-2.182H12v4.637h6.436c-.317 1.559-1.17 2.766-2.395 3.558L19.834 21Z"/>
-                      <path fill="#FBBC05" d="M5.277 14.314a7.12 7.12 0 0 1-.388-2.314c0-.805.142-1.582.388-2.235L1.24 6.65A11.934 11.934 0 0 0 0 12c0 1.92.445 3.73 1.24 5.35l4.037-3.036Z"/>
-                    </svg>
-                  </span>
-                  <span className="oauth-btn-text">
-                    <strong>Continue with Google</strong>
-                    <span>Sign in using your Google account</span>
-                  </span>
-                  <span className="oauth-arrow">→</span>
-                </button>
+            <div className="oauth-stack">
+              <button
+                type="button"
+                className="oauth-btn"
+                onClick={() => loginWithProvider("oauth_google")}
+              >
+                <span className="oauth-logo"><GoogleIcon /></span>
+                <span className="oauth-label">Continue with Google</span>
+                <span className="oauth-hint">oauth / google</span>
+              </button>
 
-                <button className="oauth-btn" onClick={() => loginWithProvider("oauth_facebook")}>
-                  <span className="oauth-icon facebook">
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                      <path fill="#1877F2" d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.514c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073Z"/>
-                    </svg>
-                  </span>
-                  <span className="oauth-btn-text">
-                    <strong>Continue with Facebook</strong>
-                    <span>Sign in using your Facebook account</span>
-                  </span>
-                  <span className="oauth-arrow">→</span>
-                </button>
+              <div className="or-divider">or</div>
 
-              </div>
+              <button
+                type="button"
+                className="oauth-btn"
+                onClick={() => loginWithProvider("oauth_facebook")}
+              >
+                <span className="oauth-logo"><FacebookIcon /></span>
+                <span className="oauth-label">Continue with Facebook</span>
+                <span className="oauth-hint">oauth / facebook</span>
+              </button>
             </div>
           </SignedOut>
 
-          {/* ── SIGNED IN ── */}
           <SignedIn>
-            <div className="glass-card">
-              <div className="signed-in-body">
-                <div className="signed-in-avatar">✦</div>
-                <h3>Welcome back</h3>
-                <p>You're signed in and ready to chat.</p>
-                <div className="action-row">
-                  <Link className="btn-cta" to="/chats">
-                    Open Chats →
-                  </Link>
-                  <SignOutButton>
-                    <button className="btn-outline">Logout</button>
-                  </SignOutButton>
-                </div>
+            <div className="si-block">
+              <div className="si-badge">
+                <span className="si-dot" />
+                Identity verified
+              </div>
+              <h2 className="si-title">Access<br /><em>granted.</em></h2>
+              <p className="si-desc">
+                You are authenticated. Your private conversations
+                are waiting in the secure chat area.
+              </p>
+              <div className="si-actions">
+                <Link className="btn-primary" to="/chats">Enter Chats</Link>
+                <SignOutButton>
+                  <button type="button" className="btn-ghost">Revoke Session</button>
+                </SignOutButton>
               </div>
             </div>
           </SignedIn>
 
-        </div>
+        </section>
 
-        {/* Features strip */}
-        <div className="features">
-          <div className="feat"><span className="feat-icon">🔒</span> End-to-end private</div>
-          <div className="feat"><span className="feat-icon">🗂</span> 5 chat categories</div>
-          <div className="feat"><span className="feat-icon">🤫</span> Secret PIN vault</div>
-          <div className="feat"><span className="feat-icon">⚡</span> Instant AI replies</div>
-        </div>
+        {/* ══ FOOTER ══ */}
+        <footer className="home-footer">
+          <span>Secret AI Chat &mdash; Private by design</span>
+          <nav className="footer-links">
+            <a href="#">Terms</a>
+            <a href="#">Privacy</a>
+            <a href="#">Security</a>
+          </nav>
+        </footer>
 
-        {/* Footer */}
-        <p className="home-footer">
-          By signing in you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>
-        </p>
-
-      </main>
+      </div>
     </>
   );
 };
